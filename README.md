@@ -282,11 +282,3 @@ import type {
 ## 📝 License
 
 MIT
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Support
-
-For support, please open an issue on the [GitHub repository](https://github.com/jtclarkjr/supabase-go-rest).
