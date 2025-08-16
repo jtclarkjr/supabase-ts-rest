@@ -85,7 +85,7 @@ jspm_packages/
 .vscode-test
 
 # Built output
-dist/
+
 lib/
 build/
 
