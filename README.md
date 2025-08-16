@@ -34,7 +34,7 @@ Supabase REST Client is a lightweight, flexible TypeScript/Bun client designed t
 ## 🛠 Installation
 
 ```bash
-npm install @jtclarkjr/supabase-rest-client
+bun add github:jtclarkjr/supabase-ts-rest
 ```
 
 ## 🔧 Quick Start
