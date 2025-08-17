@@ -1,17 +1,20 @@
-import { USER_API_PATH, LOGOUT_API_PATH, INVITE_API_PATH, RESET_API_PATH } from '../utils/constants';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createUserMethods = createUserMethods;
+const constants_1 = require("../utils/constants");
 /**
  * Creates user management methods for the Supabase client.
  * @param doRequest - Core HTTP request function
  * @returns An object with user management methods
  */
-export function createUserMethods(doRequest) {
+function createUserMethods(doRequest) {
     return {
         /**
          * Retrieves the current user's information.
          * @returns The user object or API response
          */
         async getUser() {
-            return doRequest('GET', USER_API_PATH);
+            return doRequest('GET', constants_1.USER_API_PATH);
         },
         /**
          * Updates the current user's information.
@@ -19,14 +22,14 @@ export function createUserMethods(doRequest) {
          * @returns The updated user object or API response
          */
         async updateUser(payload) {
-            return doRequest('PUT', USER_API_PATH, undefined, payload);
+            return doRequest('PUT', constants_1.USER_API_PATH, undefined, payload);
         },
         /**
          * Signs out the current user.
          * @returns The API response
          */
         async signOut() {
-            return doRequest('POST', LOGOUT_API_PATH);
+            return doRequest('POST', constants_1.LOGOUT_API_PATH);
         },
         /**
          * Invites a new user by email.
@@ -35,7 +38,7 @@ export function createUserMethods(doRequest) {
          */
         async inviteUser(email) {
             const payload = { email };
-            return doRequest('POST', INVITE_API_PATH, undefined, payload);
+            return doRequest('POST', constants_1.INVITE_API_PATH, undefined, payload);
         },
         /**
          * Resets a user's password using a token.
@@ -45,7 +48,7 @@ export function createUserMethods(doRequest) {
          */
         async resetPassword(tokenValue, newPassword) {
             const payload = { token: tokenValue, password: newPassword };
-            const path = `${RESET_API_PATH}?grant_type=reset_password`;
+            const path = `${constants_1.RESET_API_PATH}?grant_type=reset_password`;
             return doRequest('POST', path, undefined, payload);
         }
     };

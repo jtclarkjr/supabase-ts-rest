@@ -1,16 +1,19 @@
-import { SupabaseError } from '../types';
-import { TOKEN_API_PATH, SIGNUP_API_PATH, MAGIC_LINK_API_PATH, RECOVER_API_PATH, VERIFY_API_PATH, USER_API_PATH, LOGOUT_API_PATH, INVITE_API_PATH, RESET_API_PATH, ERROR_MESSAGES } from '../utils/constants';
-import { createAuthMethods } from './auth';
-import { createUserMethods } from './user';
-import { createRestMethods } from './rest';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createSupabaseClient = createSupabaseClient;
+const types_1 = require("../types");
+const constants_1 = require("../utils/constants");
+const auth_1 = require("./auth");
+const user_1 = require("./user");
+const rest_1 = require("./rest");
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
  * @param config - The client configuration object containing baseUrl, apiKey, and optional token.
  * @returns A Supabase client object with methods for authentication, user management, and REST operations.
  */
-export function createSupabaseClient(config) {
+function createSupabaseClient(config) {
     if (!config.baseUrl || !config.apiKey) {
-        throw new SupabaseError(ERROR_MESSAGES.INVALID_CONFIG);
+        throw new types_1.SupabaseError(constants_1.ERROR_MESSAGES.INVALID_CONFIG);
     }
     let baseUrl = config.baseUrl;
     let apiKey = config.apiKey;
@@ -34,14 +37,14 @@ export function createSupabaseClient(config) {
         }
         // Prepare headers
         const headers = {
-            'apikey': apiKey,
-            'Authorization': `Bearer ${token || apiKey}`,
-            'Content-Type': 'application/json',
+            apikey: apiKey,
+            Authorization: `Bearer ${token || apiKey}`,
+            'Content-Type': 'application/json'
         };
         // Prepare fetch options
         const options = {
             method,
-            headers,
+            headers
         };
         if (body !== undefined) {
             options.body = JSON.stringify(body);
@@ -50,7 +53,7 @@ export function createSupabaseClient(config) {
         const response = await fetch(url, options);
         if (!response.ok) {
             const text = await response.text();
-            throw new SupabaseError(`Request failed: ${response.status} ${text}`);
+            throw new types_1.SupabaseError(`Request failed: ${response.status} ${text}`);
         }
         const text = await response.text();
         try {
@@ -69,39 +72,45 @@ export function createSupabaseClient(config) {
      * @throws SupabaseError if the request fails
      */
     async function authRequest(endpoint, payload) {
-        const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`;
+        const url = endpoint.startsWith('http')
+            ? endpoint
+            : `${baseUrl}/${endpoint}`;
         const headers = {
-            'apikey': apiKey,
-            'Authorization': `Bearer ${token || apiKey}`,
-            'Content-Type': 'application/json',
+            apikey: apiKey,
+            Authorization: `Bearer ${token || apiKey}`,
+            'Content-Type': 'application/json'
         };
         const response = await fetch(url, {
             method: 'POST',
             headers,
-            body: JSON.stringify(payload),
+            body: JSON.stringify(payload)
         });
         if (!response.ok) {
             const text = await response.text();
-            throw new SupabaseError(`Auth request failed: ${response.status} ${text}`);
+            throw new types_1.SupabaseError(`Auth request failed: ${response.status} ${text}`);
         }
         return response.json();
     }
     // Create method groups
-    const authMethods = createAuthMethods(doRequest, authRequest);
-    const userMethods = createUserMethods(doRequest);
-    const restMethods = createRestMethods(doRequest);
+    const authMethods = (0, auth_1.createAuthMethods)(doRequest, authRequest);
+    const userMethods = (0, user_1.createUserMethods)(doRequest);
+    const restMethods = (0, rest_1.createRestMethods)(doRequest);
     // Return the client object with all methods
     return {
         // Properties
         baseUrl,
         apiKey,
-        get token() { return token; },
+        get token() {
+            return token;
+        },
         // Core methods
         /**
          * Sets the current authentication token for the client.
          * @param newToken - The new token to use for requests
          */
-        setToken: (newToken) => { token = newToken; },
+        setToken: (newToken) => {
+            token = newToken;
+        },
         /**
          * Gets the current authentication token used by the client.
          * @returns The current token string
@@ -135,16 +144,17 @@ export function createSupabaseClient(config) {
          */
         delete: restMethods.del, // Map 'delete' to 'del' since 'delete' is a reserved word
         // Constants for compatibility
-        TOKEN_API_PATH,
-        SIGNUP_API_PATH,
-        MAGIC_LINK_API_PATH,
-        RECOVER_API_PATH,
-        VERIFY_API_PATH,
-        USER_API_PATH,
-        LOGOUT_API_PATH,
-        INVITE_API_PATH,
-        RESET_API_PATH,
-        ERROR_MESSAGES,
+        TOKEN_API_PATH: // Map 'delete' to 'del' since 'delete' is a reserved word
+        constants_1.TOKEN_API_PATH,
+        SIGNUP_API_PATH: constants_1.SIGNUP_API_PATH,
+        MAGIC_LINK_API_PATH: constants_1.MAGIC_LINK_API_PATH,
+        RECOVER_API_PATH: constants_1.RECOVER_API_PATH,
+        VERIFY_API_PATH: constants_1.VERIFY_API_PATH,
+        USER_API_PATH: constants_1.USER_API_PATH,
+        LOGOUT_API_PATH: constants_1.LOGOUT_API_PATH,
+        INVITE_API_PATH: constants_1.INVITE_API_PATH,
+        RESET_API_PATH: constants_1.RESET_API_PATH,
+        ERROR_MESSAGES: constants_1.ERROR_MESSAGES
     };
 }
 //# sourceMappingURL=index.js.map

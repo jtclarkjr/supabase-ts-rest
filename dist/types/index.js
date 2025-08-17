@@ -1,10 +1,10 @@
-/**
- * Type definitions for Supabase REST client
- */
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SupabaseError = void 0;
 /**
  * Custom error class for Supabase client errors
  */
-export class SupabaseError extends Error {
+class SupabaseError extends Error {
     statusCode;
     response;
     constructor(message, statusCode, response) {
@@ -14,4 +14,5 @@ export class SupabaseError extends Error {
         this.name = 'SupabaseError';
     }
 }
+exports.SupabaseError = SupabaseError;
 //# sourceMappingURL=index.js.map

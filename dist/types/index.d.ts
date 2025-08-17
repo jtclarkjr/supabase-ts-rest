@@ -1,3 +1,5 @@
+import type { createSupabaseClient } from '../client';
+export type SupabaseClient = ReturnType<typeof createSupabaseClient>;
 /**
  * Type definitions for Supabase REST client
  */

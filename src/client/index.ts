@@ -5,7 +5,7 @@ import {
   QueryParams,
   HttpMethod,
   SupabaseError
-} from '../types';
+} from '../types'
 import {
   TOKEN_API_PATH,
   SIGNUP_API_PATH,
@@ -17,10 +17,10 @@ import {
   INVITE_API_PATH,
   RESET_API_PATH,
   ERROR_MESSAGES
-} from '../utils/constants';
-import { createAuthMethods } from './auth';
-import { createUserMethods } from './user';
-import { createRestMethods } from './rest';
+} from '../utils/constants'
+import { createAuthMethods } from './auth'
+import { createUserMethods } from './user'
+import { createRestMethods } from './rest'
 
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
@@ -29,12 +29,12 @@ import { createRestMethods } from './rest';
  */
 export function createSupabaseClient(config: ClientConfig) {
   if (!config.baseUrl || !config.apiKey) {
-    throw new SupabaseError(ERROR_MESSAGES.INVALID_CONFIG);
+    throw new SupabaseError(ERROR_MESSAGES.INVALID_CONFIG)
   }
 
-  let baseUrl = config.baseUrl;
-  let apiKey = config.apiKey;
-  let token = config.token;
+  let baseUrl = config.baseUrl
+  let apiKey = config.apiKey
+  let token = config.token
 
   // Core HTTP request method
   /**
@@ -46,38 +46,45 @@ export function createSupabaseClient(config: ClientConfig) {
    * @returns The parsed JSON response or raw text
    * @throws SupabaseError if the request fails
    */
-  async function doRequest(method: HttpMethod, endpoint: string, queryParams?: QueryParams, body?: unknown): Promise<unknown> {
+  async function doRequest(
+    method: HttpMethod,
+    endpoint: string,
+    queryParams?: QueryParams,
+    body?: unknown
+  ): Promise<unknown> {
     // Build URL
-    let url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`;
+    let url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`
     if (queryParams && Object.keys(queryParams).length > 0) {
-      const params = new URLSearchParams(queryParams as Record<string, string>).toString();
-      url += (url.includes('?') ? '&' : '?') + params;
+      const params = new URLSearchParams(
+        queryParams as Record<string, string>
+      ).toString()
+      url += (url.includes('?') ? '&' : '?') + params
     }
     // Prepare headers
     const headers: Record<string, string> = {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${token || apiKey}`,
-      'Content-Type': 'application/json',
-    };
+      apikey: apiKey,
+      Authorization: `Bearer ${token || apiKey}`,
+      'Content-Type': 'application/json'
+    }
     // Prepare fetch options
     const options: RequestInit = {
       method,
-      headers,
-    };
+      headers
+    }
     if (body !== undefined) {
-      options.body = JSON.stringify(body);
+      options.body = JSON.stringify(body)
     }
     // Make request
-    const response = await fetch(url, options);
+    const response = await fetch(url, options)
     if (!response.ok) {
-      const text = await response.text();
-      throw new SupabaseError(`Request failed: ${response.status} ${text}`);
+      const text = await response.text()
+      throw new SupabaseError(`Request failed: ${response.status} ${text}`)
     }
-    const text = await response.text();
+    const text = await response.text()
     try {
-      return text ? JSON.parse(text) : {};
+      return text ? JSON.parse(text) : {}
     } catch {
-      return text;
+      return text
     }
   }
 
@@ -89,78 +96,87 @@ export function createSupabaseClient(config: ClientConfig) {
    * @returns The authentication token response
    * @throws SupabaseError if the request fails
    */
-  async function authRequest(endpoint: string, payload: TokenRequestPayload): Promise<AuthTokenResponse> {
-    const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`;
+  async function authRequest(
+    endpoint: string,
+    payload: TokenRequestPayload
+  ): Promise<AuthTokenResponse> {
+    const url = endpoint.startsWith('http')
+      ? endpoint
+      : `${baseUrl}/${endpoint}`
     const headers: Record<string, string> = {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${token || apiKey}`,
-      'Content-Type': 'application/json',
-    };
+      apikey: apiKey,
+      Authorization: `Bearer ${token || apiKey}`,
+      'Content-Type': 'application/json'
+    }
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify(payload)
+    })
     if (!response.ok) {
-      const text = await response.text();
-      throw new SupabaseError(`Auth request failed: ${response.status} ${text}`);
+      const text = await response.text()
+      throw new SupabaseError(`Auth request failed: ${response.status} ${text}`)
     }
-    return response.json();
+    return response.json()
   }
 
   // Create method groups
-  const authMethods = createAuthMethods(doRequest, authRequest);
-  const userMethods = createUserMethods(doRequest);
-  const restMethods = createRestMethods(doRequest);
+  const authMethods = createAuthMethods(doRequest, authRequest)
+  const userMethods = createUserMethods(doRequest)
+  const restMethods = createRestMethods(doRequest)
 
   // Return the client object with all methods
   return {
     // Properties
     baseUrl,
     apiKey,
-    get token() { return token; },
-    
+    get token() {
+      return token
+    },
+
     // Core methods
-  /**
-   * Sets the current authentication token for the client.
-   * @param newToken - The new token to use for requests
-   */
-  setToken: (newToken: string) => { token = newToken; },
-  /**
-   * Gets the current authentication token used by the client.
-   * @returns The current token string
-   */
-  getToken: () => token,
-  /**
-   * Exposes the core HTTP request method for advanced usage.
-   */
-  doRequest,
-  /**
-   * Exposes the auth-specific request method for advanced usage.
-   */
-  authRequest,
+    /**
+     * Sets the current authentication token for the client.
+     * @param newToken - The new token to use for requests
+     */
+    setToken: (newToken: string) => {
+      token = newToken
+    },
+    /**
+     * Gets the current authentication token used by the client.
+     * @returns The current token string
+     */
+    getToken: () => token,
+    /**
+     * Exposes the core HTTP request method for advanced usage.
+     */
+    doRequest,
+    /**
+     * Exposes the auth-specific request method for advanced usage.
+     */
+    authRequest,
 
     // Auth methods
-  /**
-   * Authentication methods (signIn, signUp, etc.)
-   */
-  ...authMethods,
+    /**
+     * Authentication methods (signIn, signUp, etc.)
+     */
+    ...authMethods,
 
     // User methods
-  /**
-   * User management methods (getUser, updateUser, etc.)
-   */
-  ...userMethods,
+    /**
+     * User management methods (getUser, updateUser, etc.)
+     */
+    ...userMethods,
 
     // REST methods
-  /**
-   * REST methods for interacting with tables and views.
-   */
-  ...restMethods,
-  /**
-   * Alias for the REST delete method (since 'delete' is a reserved word).
-   */
-  delete: restMethods.del, // Map 'delete' to 'del' since 'delete' is a reserved word
+    /**
+     * REST methods for interacting with tables and views.
+     */
+    ...restMethods,
+    /**
+     * Alias for the REST delete method (since 'delete' is a reserved word).
+     */
+    delete: restMethods.del, // Map 'delete' to 'del' since 'delete' is a reserved word
 
     // Constants for compatibility
     TOKEN_API_PATH,
@@ -172,8 +188,6 @@ export function createSupabaseClient(config: ClientConfig) {
     LOGOUT_API_PATH,
     INVITE_API_PATH,
     RESET_API_PATH,
-    ERROR_MESSAGES,
-  };
+    ERROR_MESSAGES
+  }
 }
-
-export type SupabaseClient = ReturnType<typeof createSupabaseClient>;

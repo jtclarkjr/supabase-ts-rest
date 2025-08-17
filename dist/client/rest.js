@@ -1,9 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createRestMethods = createRestMethods;
 /**
  * Creates REST methods for interacting with database tables and views.
  * @param doRequest - Core HTTP request function
  * @returns An object with REST methods (get, post, put, patch, del)
  */
-export function createRestMethods(doRequest) {
+function createRestMethods(doRequest) {
     return {
         /**
          * Performs a GET request to the specified endpoint.
