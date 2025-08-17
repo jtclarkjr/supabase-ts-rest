@@ -276,7 +276,7 @@ import type {
   AuthTokenResponse,
   QueryParams,
   SupabaseError,
-} from "@jtclarkjr/supabase-rest-client";
+} from "@jtclarkjr/supabase-ts-rest";
 ```
 
 ## 📝 License
