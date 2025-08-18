@@ -22,7 +22,7 @@ function createUserMethods(doRequest) {
          * @returns The updated user object or API response
          */
         async updateUser(payload) {
-            return doRequest('PUT', constants_1.USER_API_PATH, undefined, payload);
+            return doRequest('PUT', constants_1.USER_API_PATH, payload);
         },
         /**
          * Signs out the current user.
@@ -38,7 +38,7 @@ function createUserMethods(doRequest) {
          */
         async inviteUser(email) {
             const payload = { email };
-            return doRequest('POST', constants_1.INVITE_API_PATH, undefined, payload);
+            return doRequest('POST', constants_1.INVITE_API_PATH, payload);
         },
         /**
          * Resets a user's password using a token.
@@ -49,7 +49,7 @@ function createUserMethods(doRequest) {
         async resetPassword(tokenValue, newPassword) {
             const payload = { token: tokenValue, password: newPassword };
             const path = `${constants_1.RESET_API_PATH}?grant_type=reset_password`;
-            return doRequest('POST', path, undefined, payload);
+            return doRequest('POST', path, payload);
         }
     };
 }

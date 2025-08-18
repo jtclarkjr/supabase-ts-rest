@@ -15,7 +15,10 @@ function createRestMethods(doRequest) {
          * @returns The API response
          */
         async get(endpoint, queryParams) {
-            return doRequest('GET', endpoint, queryParams);
+            if (queryParams) {
+                return doRequest('GET', endpoint, queryParams);
+            }
+            return doRequest('GET', endpoint);
         },
         /**
          * Performs a POST request to the specified endpoint.
@@ -24,7 +27,7 @@ function createRestMethods(doRequest) {
          * @returns The API response
          */
         async post(endpoint, data) {
-            return doRequest('POST', endpoint, undefined, data);
+            return doRequest('POST', endpoint, data);
         },
         /**
          * Performs a PUT request to update a record by primary key.
@@ -34,9 +37,9 @@ function createRestMethods(doRequest) {
          * @param data - The request body
          * @returns The API response
          */
-        async put(endpoint, primaryKeyName, primaryKeyValue, data) {
+        async put(endpoint, primaryKeyName, data, primaryKeyValue) {
             const queryParams = { [primaryKeyName]: primaryKeyValue };
-            return doRequest('PUT', endpoint, queryParams, data);
+            return doRequest('PUT', endpoint, data, queryParams);
         },
         /**
          * Performs a PATCH request to update records.
@@ -45,8 +48,8 @@ function createRestMethods(doRequest) {
          * @param data - The request body
          * @returns The API response
          */
-        async patch(endpoint, queryParams, data) {
-            return doRequest('PATCH', endpoint, queryParams, data);
+        async patch(endpoint, data, queryParams) {
+            return doRequest('PATCH', endpoint, data, queryParams);
         },
         /**
          * Performs a DELETE request to remove a record by primary key.

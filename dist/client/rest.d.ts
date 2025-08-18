@@ -27,7 +27,7 @@ export declare function createRestMethods(doRequest: DoRequestFn): {
      * @param data - The request body
      * @returns The API response
      */
-    put(endpoint: string, primaryKeyName: string, primaryKeyValue: string, data: unknown): Promise<unknown>;
+    put(endpoint: string, primaryKeyName: string, data: unknown, primaryKeyValue: string): Promise<unknown>;
     /**
      * Performs a PATCH request to update records.
      * @param endpoint - The API endpoint
@@ -35,7 +35,7 @@ export declare function createRestMethods(doRequest: DoRequestFn): {
      * @param data - The request body
      * @returns The API response
      */
-    patch(endpoint: string, queryParams: QueryParams, data: unknown): Promise<unknown>;
+    patch(endpoint: string, data: unknown, queryParams: QueryParams): Promise<unknown>;
     /**
      * Performs a DELETE request to remove a record by primary key.
      * @param endpoint - The API endpoint

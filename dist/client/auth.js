@@ -19,7 +19,7 @@ function createAuthMethods(doRequest, authRequest) {
         async signUp(email, password) {
             const payload = { email, password };
             const path = `${constants_1.SIGNUP_API_PATH}?grant_type=signup`;
-            return doRequest('POST', path, undefined, payload);
+            return doRequest('POST', path, payload);
         },
         /**
          * Signs in a user with email and password.
@@ -49,7 +49,7 @@ function createAuthMethods(doRequest, authRequest) {
          */
         async sendMagicLink(email) {
             const payload = { email };
-            return doRequest('POST', constants_1.MAGIC_LINK_API_PATH, undefined, payload);
+            return doRequest('POST', constants_1.MAGIC_LINK_API_PATH, payload);
         },
         /**
          * Sends a password recovery email to the user.
@@ -58,7 +58,7 @@ function createAuthMethods(doRequest, authRequest) {
          */
         async sendPasswordRecovery(email) {
             const payload = { email };
-            return doRequest('POST', constants_1.RECOVER_API_PATH, undefined, payload);
+            return doRequest('POST', constants_1.RECOVER_API_PATH, payload);
         },
         /**
          * Verifies a one-time password (OTP) for email or phone.
@@ -73,7 +73,7 @@ function createAuthMethods(doRequest, authRequest) {
                 token: tokenValue,
                 type: otpType
             };
-            return doRequest('POST', constants_1.VERIFY_API_PATH, undefined, payload);
+            return doRequest('POST', constants_1.VERIFY_API_PATH, payload);
         }
     };
 }

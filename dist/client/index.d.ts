@@ -27,8 +27,8 @@ export declare function createSupabaseClient(config: ClientConfig): {
     };
     get(endpoint: string, queryParams?: QueryParams): Promise<unknown>;
     post(endpoint: string, data: unknown): Promise<unknown>;
-    put(endpoint: string, primaryKeyName: string, primaryKeyValue: string, data: unknown): Promise<unknown>;
-    patch(endpoint: string, queryParams: QueryParams, data: unknown): Promise<unknown>;
+    put(endpoint: string, primaryKeyName: string, data: unknown, primaryKeyValue: string): Promise<unknown>;
+    patch(endpoint: string, data: unknown, queryParams: QueryParams): Promise<unknown>;
     del(endpoint: string, primaryKeyName: string, primaryKeyValue: string): Promise<unknown>;
     getUser(): Promise<unknown>;
     updateUser(payload: Record<string, unknown>): Promise<unknown>;
@@ -57,7 +57,7 @@ export declare function createSupabaseClient(config: ClientConfig): {
     /**
      * Exposes the core HTTP request method for advanced usage.
      */
-    doRequest: (method: HttpMethod, endpoint: string, queryParams?: QueryParams, body?: unknown) => Promise<unknown>;
+    doRequest: (method: HttpMethod, endpoint: string, body?: unknown, queryParams?: QueryParams) => Promise<unknown>;
     /**
      * Exposes the auth-specific request method for advanced usage.
      */

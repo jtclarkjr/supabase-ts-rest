@@ -56,7 +56,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 /**
  * Function types for client methods
  */
-export type DoRequestFn = (method: HttpMethod, endpoint: string, queryParams?: QueryParams, body?: unknown) => Promise<unknown>;
+export type DoRequestFn = (method: HttpMethod, endpoint: string, body?: unknown, queryParams?: QueryParams) => Promise<unknown>;
 export type AuthRequestFn = (endpoint: string, payload: TokenRequestPayload) => Promise<AuthTokenResponse>;
 /**
  * Request configuration
