@@ -65,11 +65,10 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
  * Function types for client methods
  */
 export type DoRequestFn = (
-  
   method: HttpMethod,
   endpoint: string,
-  queryParams?: QueryParams,
-  body?: unknown
+  body?: unknown,
+  queryParams?: QueryParams
 ) => Promise<unknown>
 
 export type AuthRequestFn = (

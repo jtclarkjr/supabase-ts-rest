@@ -34,7 +34,7 @@ export function createAuthMethods(
     async signUp(email: string, password: string): Promise<unknown> {
       const payload = { email, password }
       const path = `${SIGNUP_API_PATH}?grant_type=signup`
-      return doRequest('POST', path, undefined, payload)
+      return doRequest('POST', path, payload)
     },
 
     /**
@@ -67,7 +67,7 @@ export function createAuthMethods(
      */
     async sendMagicLink(email: string): Promise<unknown> {
       const payload: MagicLinkPayload = { email }
-      return doRequest('POST', MAGIC_LINK_API_PATH, undefined, payload)
+      return doRequest('POST', MAGIC_LINK_API_PATH, payload)
     },
 
     /**
@@ -77,7 +77,7 @@ export function createAuthMethods(
      */
     async sendPasswordRecovery(email: string): Promise<unknown> {
       const payload: MagicLinkPayload = { email }
-      return doRequest('POST', RECOVER_API_PATH, undefined, payload)
+      return doRequest('POST', RECOVER_API_PATH, payload)
     },
 
     /**
@@ -97,7 +97,7 @@ export function createAuthMethods(
         token: tokenValue,
         type: otpType
       }
-      return doRequest('POST', VERIFY_API_PATH, undefined, payload)
+      return doRequest('POST', VERIFY_API_PATH, payload)
     }
   }
 }

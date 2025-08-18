@@ -41,16 +41,16 @@ export function createSupabaseClient(config: ClientConfig) {
    * Core HTTP request method for making API calls.
    * @param method - HTTP method (GET, POST, etc.)
    * @param endpoint - API endpoint or full URL
+   * * @param body - Optional request body
    * @param queryParams - Optional query parameters
-   * @param body - Optional request body
    * @returns The parsed JSON response or raw text
    * @throws SupabaseError if the request fails
    */
   async function doRequest(
     method: HttpMethod,
     endpoint: string,
-    queryParams?: QueryParams,
-    body?: unknown
+    body?: unknown,
+    queryParams?: QueryParams
   ): Promise<unknown> {
     // Build URL
     let url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`

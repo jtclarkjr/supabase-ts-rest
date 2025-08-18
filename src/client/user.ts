@@ -27,7 +27,7 @@ export function createUserMethods(doRequest: DoRequestFn) {
      * @returns The updated user object or API response
      */
     async updateUser(payload: Record<string, unknown>): Promise<unknown> {
-      return doRequest('PUT', USER_API_PATH, undefined, payload)
+      return doRequest('PUT', USER_API_PATH, payload)
     },
 
     /**
@@ -45,7 +45,7 @@ export function createUserMethods(doRequest: DoRequestFn) {
      */
     async inviteUser(email: string): Promise<unknown> {
       const payload = { email }
-      return doRequest('POST', INVITE_API_PATH, undefined, payload)
+      return doRequest('POST', INVITE_API_PATH, payload)
     },
 
     /**
@@ -60,7 +60,7 @@ export function createUserMethods(doRequest: DoRequestFn) {
     ): Promise<unknown> {
       const payload = { token: tokenValue, password: newPassword }
       const path = `${RESET_API_PATH}?grant_type=reset_password`
-      return doRequest('POST', path, undefined, payload)
+      return doRequest('POST', path, payload)
     }
   }
 }

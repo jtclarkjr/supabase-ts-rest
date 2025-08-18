@@ -14,7 +14,10 @@ export function createRestMethods(doRequest: DoRequestFn) {
      * @returns The API response
      */
     async get(endpoint: string, queryParams?: QueryParams): Promise<unknown> {
-      return doRequest('GET', endpoint, queryParams)
+      if (queryParams) {
+        return doRequest('GET', endpoint, queryParams)
+      }
+      return doRequest('GET', endpoint)
     },
 
     /**
@@ -24,7 +27,7 @@ export function createRestMethods(doRequest: DoRequestFn) {
      * @returns The API response
      */
     async post(endpoint: string, data: unknown): Promise<unknown> {
-      return doRequest('POST', endpoint, undefined, data)
+      return doRequest('POST', endpoint, data)
     },
 
     /**
@@ -38,11 +41,11 @@ export function createRestMethods(doRequest: DoRequestFn) {
     async put(
       endpoint: string,
       primaryKeyName: string,
-      primaryKeyValue: string,
-      data: unknown
+      data: unknown,
+      primaryKeyValue: string
     ): Promise<unknown> {
       const queryParams = { [primaryKeyName]: primaryKeyValue }
-      return doRequest('PUT', endpoint, queryParams, data)
+      return doRequest('PUT', endpoint, data, queryParams)
     },
 
     /**
@@ -54,10 +57,10 @@ export function createRestMethods(doRequest: DoRequestFn) {
      */
     async patch(
       endpoint: string,
-      queryParams: QueryParams,
-      data: unknown
+      data: unknown,
+      queryParams: QueryParams
     ): Promise<unknown> {
-      return doRequest('PATCH', endpoint, queryParams, data)
+      return doRequest('PATCH', endpoint, data, queryParams)
     },
 
     /**
