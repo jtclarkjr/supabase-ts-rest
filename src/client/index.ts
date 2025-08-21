@@ -137,14 +137,70 @@ export function createSupabaseClient(config: ClientConfig) {
     // Core methods
     /**
      * Sets the current authentication token for the client.
-     * @param newToken - The new token to use for requests
+     * 
+     * Updates the token used for authenticated requests. This token will be
+     * included in the Authorization header for all subsequent API calls.
+     * 
+     * @param newToken - The JWT access token to use for authenticated requests
+     * 
+     * @example
+     * ```typescript
+     * const client = createClient('https://your-project.supabase.co', 'your-anon-key');
+     * 
+     * // After user signs in
+     * const auth = await client.signIn('user@example.com', 'password');
+     * client.setToken(auth.access_token);
+     * 
+     * // Now all requests will be authenticated
+     * const userData = await client.getUser();
+     * ```
+     * 
+     * @example
+     * ```typescript
+     * // Clear token to make unauthenticated requests
+     * client.setToken('');
+     * 
+     * // Restore token from storage
+     * const savedToken = localStorage.getItem('auth_token');
+     * if (savedToken) {
+     *   client.setToken(savedToken);
+     * }
+     * ```
      */
     setToken: (newToken: string) => {
       token = newToken
     },
+
     /**
      * Gets the current authentication token used by the client.
-     * @returns The current token string
+     * 
+     * Returns the currently set JWT token that is being used for
+     * authenticated requests. Returns undefined if no token is set.
+     * 
+     * @returns The current JWT token string, or undefined if not set
+     * 
+     * @example
+     * ```typescript
+     * const client = createClient('https://your-project.supabase.co', 'your-anon-key');
+     * 
+     * // Check if user is authenticated
+     * const currentToken = client.getToken();
+     * if (currentToken) {
+     *   console.log('User is authenticated');
+     * } else {
+     *   console.log('User needs to sign in');
+     * }
+     * ```
+     * 
+     * @example
+     * ```typescript
+     * // Save token to localStorage
+     * const auth = await client.signIn('user@example.com', 'password');
+     * client.setToken(auth.access_token);
+     * 
+     * const token = client.getToken();
+     * localStorage.setItem('auth_token', token);
+     * ```
      */
     getToken: () => token,
     /**
