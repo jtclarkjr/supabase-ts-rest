@@ -2,6 +2,8 @@ import {
   ClientConfig,
   AuthTokenResponse,
   TokenRequestPayload,
+  MagicLinkPayload,
+  VerifyOTPPayload,
   QueryParams,
   HttpMethod,
   SupabaseError
@@ -18,14 +20,9 @@ import {
   RESET_API_PATH,
   ERROR_MESSAGES
 } from '../utils/constants'
-import { createAuthMethods } from './auth'
-import { createUserMethods } from './user'
-import { createRestMethods } from './rest'
 
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
- * @param config - The client configuration object containing baseUrl, apiKey, and optional token.
- * @returns A Supabase client object with methods for authentication, user management, and REST operations.
  */
 export function createSupabaseClient(config: ClientConfig) {
   if (!config.baseUrl || !config.apiKey) {
@@ -37,16 +34,7 @@ export function createSupabaseClient(config: ClientConfig) {
   let token = config.token
 
   // Core HTTP request method
-  /**
-   * Core HTTP request method for making API calls.
-   * @param method - HTTP method (GET, POST, etc.)
-   * @param endpoint - API endpoint or full URL
-   * * @param body - Optional request body
-   * @param queryParams - Optional query parameters
-   * @returns The parsed JSON response or raw text
-   * @throws SupabaseError if the request fails
-   */
-  async function doRequest(
+  async function request(
     method: HttpMethod,
     endpoint: string,
     body?: unknown,
@@ -89,14 +77,7 @@ export function createSupabaseClient(config: ClientConfig) {
   }
 
   // Auth request method
-  /**
-   * Auth-specific request method for authentication endpoints.
-   * @param endpoint - Auth API endpoint or full URL
-   * @param payload - Request payload for authentication
-   * @returns The authentication token response
-   * @throws SupabaseError if the request fails
-   */
-  async function authRequest(
+  async function auth(
     endpoint: string,
     payload: TokenRequestPayload
   ): Promise<AuthTokenResponse> {
@@ -120,12 +101,7 @@ export function createSupabaseClient(config: ClientConfig) {
     return response.json()
   }
 
-  // Create method groups
-  const authMethods = createAuthMethods(doRequest, authRequest)
-  const userMethods = createUserMethods(doRequest)
-  const restMethods = createRestMethods(doRequest)
-
-  // Return the client object with all methods
+  // Return the client object with all methods defined directly
   return {
     // Properties
     baseUrl,
@@ -135,104 +111,148 @@ export function createSupabaseClient(config: ClientConfig) {
     },
 
     // Core methods
-    /**
-     * Sets the current authentication token for the client.
-     * 
-     * Updates the token used for authenticated requests. This token will be
-     * included in the Authorization header for all subsequent API calls.
-     * 
-     * @param newToken - The JWT access token to use for authenticated requests
-     * 
-     * @example
-     * ```typescript
-     * const client = createClient('https://your-project.supabase.co', 'your-anon-key');
-     * 
-     * // After user signs in
-     * const auth = await client.signIn('user@example.com', 'password');
-     * client.setToken(auth.access_token);
-     * 
-     * // Now all requests will be authenticated
-     * const userData = await client.getUser();
-     * ```
-     * 
-     * @example
-     * ```typescript
-     * // Clear token to make unauthenticated requests
-     * client.setToken('');
-     * 
-     * // Restore token from storage
-     * const savedToken = localStorage.getItem('auth_token');
-     * if (savedToken) {
-     *   client.setToken(savedToken);
-     * }
-     * ```
-     */
+    /** Sets the authentication token. */
     setToken: (newToken: string) => {
       token = newToken
     },
 
-    /**
-     * Gets the current authentication token used by the client.
-     * 
-     * Returns the currently set JWT token that is being used for
-     * authenticated requests. Returns undefined if no token is set.
-     * 
-     * @returns The current JWT token string, or undefined if not set
-     * 
-     * @example
-     * ```typescript
-     * const client = createClient('https://your-project.supabase.co', 'your-anon-key');
-     * 
-     * // Check if user is authenticated
-     * const currentToken = client.getToken();
-     * if (currentToken) {
-     *   console.log('User is authenticated');
-     * } else {
-     *   console.log('User needs to sign in');
-     * }
-     * ```
-     * 
-     * @example
-     * ```typescript
-     * // Save token to localStorage
-     * const auth = await client.signIn('user@example.com', 'password');
-     * client.setToken(auth.access_token);
-     * 
-     * const token = client.getToken();
-     * localStorage.setItem('auth_token', token);
-     * ```
-     */
+    /** Gets the current authentication token. */
     getToken: () => token,
-    /**
-     * Exposes the core HTTP request method for advanced usage.
-     */
-    doRequest,
-    /**
-     * Exposes the auth-specific request method for advanced usage.
-     */
-    authRequest,
+    
+    /** Core HTTP request method. */
+    request,
+    
+    /** Auth request method. */
+    auth,
 
     // Auth methods
-    /**
-     * Authentication methods (signIn, signUp, etc.)
-     */
-    ...authMethods,
+    /** Registers a new user with email and password. */
+    async signUp(email: string, password: string): Promise<unknown> {
+      const payload = { email, password }
+      const path = `${SIGNUP_API_PATH}?grant_type=signup`
+      return request('POST', path, payload)
+    },
+
+    /** Signs in a user with email and password. */
+    async signIn(email: string, password: string): Promise<AuthTokenResponse> {
+      const payload: TokenRequestPayload = { email, password }
+      const path = `${TOKEN_API_PATH}?grant_type=password`
+      return auth(path, payload)
+    },
+
+    /** Refreshes the authentication token. */
+    async refreshToken(refreshTokenValue: string): Promise<AuthTokenResponse> {
+      const payload: TokenRequestPayload = { refresh_token: refreshTokenValue }
+      const path = `${TOKEN_API_PATH}?grant_type=refresh_token`
+      return auth(path, payload)
+    },
+
+    /** Sends a magic link for passwordless sign-in. */
+    async sendMagicLink(email: string): Promise<unknown> {
+      const payload: MagicLinkPayload = { email }
+      return request('POST', MAGIC_LINK_API_PATH, payload)
+    },
+
+    /** Sends a password recovery email. */
+    async sendPasswordRecovery(email: string): Promise<unknown> {
+      const payload: MagicLinkPayload = { email }
+      return request('POST', RECOVER_API_PATH, payload)
+    },
+
+    /** Verifies an OTP code. */
+    async verifyOTP(
+      email: string,
+      tokenValue: string,
+      otpType: string
+    ): Promise<unknown> {
+      const payload: VerifyOTPPayload = {
+        email,
+        token: tokenValue,
+        type: otpType
+      }
+      return request('POST', VERIFY_API_PATH, payload)
+    },
 
     // User methods
-    /**
-     * User management methods (getUser, updateUser, etc.)
-     */
-    ...userMethods,
+    /** Gets the current authenticated user. */
+    async getUser(): Promise<unknown> {
+      return request('GET', USER_API_PATH)
+    },
+
+    /** Updates the current user's information. */
+    async updateUser(payload: Record<string, unknown>): Promise<unknown> {
+      return request('PUT', USER_API_PATH, payload)
+    },
+
+    /** Signs out the current user. */
+    async signOut(): Promise<unknown> {
+      return request('POST', LOGOUT_API_PATH)
+    },
+
+    /** Invites a new user by email. */
+    async inviteUser(email: string): Promise<unknown> {
+      const payload = { email }
+      return request('POST', INVITE_API_PATH, payload)
+    },
+
+    /** Resets a user's password using a reset token. */
+    async resetPassword(
+      tokenValue: string,
+      newPassword: string
+    ): Promise<unknown> {
+      const payload = { token: tokenValue, password: newPassword }
+      const path = `${RESET_API_PATH}?grant_type=reset_password`
+      return request('POST', path, payload)
+    },
 
     // REST methods
-    /**
-     * REST methods for interacting with tables and views.
-     */
-    ...restMethods,
-    /**
-     * Alias for the REST delete method (since 'delete' is a reserved word).
-     */
-    delete: restMethods.del, // Map 'delete' to 'del' since 'delete' is a reserved word
+    /** Performs a GET request to fetch data. */
+    async get(endpoint: string, queryParams?: QueryParams): Promise<unknown> {
+      if (queryParams) {
+        return request('GET', endpoint, undefined, queryParams)
+      }
+      return request('GET', endpoint)
+    },
+
+    /** Performs a POST request to create data. */
+    async post(endpoint: string, data: unknown): Promise<unknown> {
+      return request('POST', endpoint, data)
+    },
+
+    /** Performs a PUT request to replace a record. */
+    async put(
+      endpoint: string,
+      primaryKeyName: string,
+      primaryKeyValue: string,
+      data: unknown
+    ): Promise<unknown> {
+      const queryParams = { [primaryKeyName]: primaryKeyValue }
+      return request('PUT', endpoint, data, queryParams)
+    },
+
+    /** Performs a PATCH request to update records. */
+    async patch(
+      endpoint: string,
+      queryParams: QueryParams,
+      data: unknown
+    ): Promise<unknown> {
+      return request('PATCH', endpoint, data, queryParams)
+    },
+
+    /** Performs a DELETE request to remove a record. */
+    async del(
+      endpoint: string,
+      primaryKeyName: string,
+      primaryKeyValue: string
+    ): Promise<unknown> {
+      const queryParams = { [primaryKeyName]: primaryKeyValue }
+      return request('DELETE', endpoint, queryParams)
+    },
+
+    /** Alias for the REST delete method. */
+    get delete() {
+      return this.del
+    },
 
     // Constants for compatibility
     TOKEN_API_PATH,
