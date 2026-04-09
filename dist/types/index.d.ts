@@ -106,7 +106,7 @@ export interface RequestConfig {
  */
 export declare class SupabaseError extends Error {
     statusCode?: number | undefined;
-    response?: unknown | undefined;
-    constructor(message: string, statusCode?: number | undefined, response?: unknown | undefined);
+    response?: unknown;
+    constructor(message: string, statusCode?: number | undefined, response?: unknown);
 }
 //# sourceMappingURL=index.d.ts.map

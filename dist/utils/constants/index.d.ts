@@ -13,10 +13,10 @@ export declare const LOGOUT_API_PATH = "/auth/v1/logout";
 export declare const INVITE_API_PATH = "/auth/v1/invite";
 export declare const RESET_API_PATH = "/auth/v1/reset";
 export declare const ERROR_MESSAGES: {
-    readonly INVALID_RESPONSE: "Invalid response from server";
-    readonly REQUEST_FAILED: "Request failed";
-    readonly INVALID_CONFIG: "Invalid client configuration";
-    readonly NETWORK_ERROR: "Network error occurred";
-    readonly PARSE_ERROR: "Failed to parse response";
+    readonly INVALID_RESPONSE: 'Invalid response from server';
+    readonly REQUEST_FAILED: 'Request failed';
+    readonly INVALID_CONFIG: 'Invalid client configuration';
+    readonly NETWORK_ERROR: 'Network error occurred';
+    readonly PARSE_ERROR: 'Failed to parse response';
 };
 //# sourceMappingURL=index.d.ts.map

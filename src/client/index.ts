@@ -166,10 +166,10 @@ export function createSupabaseClient(config: ClientConfig) {
 
     /** Gets the current authentication token. */
     getToken: () => token,
-    
+
     /** Core HTTP request method. */
     request,
-    
+
     /** Auth request method. */
     auth,
 
@@ -188,7 +188,11 @@ export function createSupabaseClient(config: ClientConfig) {
         code_challenge: null,
         code_challenge_method: null
       }
-      return publicRequest('POST', SIGNUP_API_PATH, payload) as Promise<AuthSessionResponse>
+      return publicRequest(
+        'POST',
+        SIGNUP_API_PATH,
+        payload
+      ) as Promise<AuthSessionResponse>
     },
 
     /** Starts an anonymous authenticated session. */
@@ -199,7 +203,11 @@ export function createSupabaseClient(config: ClientConfig) {
         data: options.data ?? {},
         gotrue_meta_security: {}
       }
-      return publicRequest('POST', SIGNUP_API_PATH, payload) as Promise<AuthSessionResponse>
+      return publicRequest(
+        'POST',
+        SIGNUP_API_PATH,
+        payload
+      ) as Promise<AuthSessionResponse>
     },
 
     /** Signs in a user with email and password. */
@@ -247,12 +255,15 @@ export function createSupabaseClient(config: ClientConfig) {
       provider: OAuthProvider,
       options: OAuthSignInOptions = {}
     ): OAuthSignInResponse {
-      const url = buildUrl(`${SIGNUP_API_PATH.replace('/signup', '/authorize')}`, {
-        provider,
-        redirect_to: options.redirectTo,
-        scopes: options.scopes,
-        ...options.queryParams
-      })
+      const url = buildUrl(
+        `${SIGNUP_API_PATH.replace('/signup', '/authorize')}`,
+        {
+          provider,
+          redirect_to: options.redirectTo,
+          scopes: options.scopes,
+          ...options.queryParams
+        }
+      )
 
       return {
         provider,
@@ -272,7 +283,9 @@ export function createSupabaseClient(config: ClientConfig) {
     },
 
     /** Signs out the current user. */
-    async signOut(scope: 'global' | 'local' | 'others' = 'global'): Promise<unknown> {
+    async signOut(
+      scope: 'global' | 'local' | 'others' = 'global'
+    ): Promise<unknown> {
       return request('POST', `${LOGOUT_API_PATH}?scope=${scope}`)
     },
 

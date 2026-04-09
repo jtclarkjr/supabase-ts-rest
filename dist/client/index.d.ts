@@ -35,7 +35,7 @@ export declare function createSupabaseClient(config: ClientConfig): {
     /** Updates the current user's information. */
     updateUser(payload: Record<string, unknown>): Promise<unknown>;
     /** Signs out the current user. */
-    signOut(scope?: "global" | "local" | "others"): Promise<unknown>;
+    signOut(scope?: 'global' | 'local' | 'others'): Promise<unknown>;
     /** Invites a new user by email. */
     inviteUser(email: string): Promise<unknown>;
     /** Resets a user's password using a reset token. */
@@ -62,11 +62,11 @@ export declare function createSupabaseClient(config: ClientConfig): {
     INVITE_API_PATH: string;
     RESET_API_PATH: string;
     ERROR_MESSAGES: {
-        readonly INVALID_RESPONSE: "Invalid response from server";
-        readonly REQUEST_FAILED: "Request failed";
-        readonly INVALID_CONFIG: "Invalid client configuration";
-        readonly NETWORK_ERROR: "Network error occurred";
-        readonly PARSE_ERROR: "Failed to parse response";
+        readonly INVALID_RESPONSE: 'Invalid response from server';
+        readonly REQUEST_FAILED: 'Request failed';
+        readonly INVALID_CONFIG: 'Invalid client configuration';
+        readonly NETWORK_ERROR: 'Network error occurred';
+        readonly PARSE_ERROR: 'Failed to parse response';
     };
 };
 //# sourceMappingURL=index.d.ts.map

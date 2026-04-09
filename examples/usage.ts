@@ -1,6 +1,6 @@
 /**
  * Example usage demonstrating the flattened client structure
- * 
+ *
  * This file demonstrates that when you use methods like client.post(),
  * the IDE should now navigate directly to the method implementation
  * instead of going through spread operators.
@@ -9,10 +9,7 @@
 import { createClient } from '../src'
 
 // Create a client
-const client = createClient(
-  'https://your-project.supabase.co',
-  'your-anon-key'
-)
+const client = createClient('https://your-project.supabase.co', 'your-anon-key')
 
 async function exampleUsage() {
   try {
@@ -41,15 +38,18 @@ async function exampleUsage() {
     console.log('Published posts:', posts)
 
     // Update a post
-    const updated = await client.patch('posts', { id: 'eq.123' }, {
-      title: 'Updated Title'
-    })
+    const updated = await client.patch(
+      'posts',
+      { id: 'eq.123' },
+      {
+        title: 'Updated Title'
+      }
+    )
     console.log('Updated post:', updated)
 
     // Delete method (alias)
     await client.delete('posts', 'id', '456')
     console.log('Post deleted')
-
   } catch (error) {
     console.error('Error:', error)
   }
