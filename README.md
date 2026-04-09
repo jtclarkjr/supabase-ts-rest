@@ -1,13 +1,13 @@
 # Supabase REST Client
 
-## 🚀 Overview
+## Overview
 
 Supabase REST Client is a lightweight, flexible TypeScript/Bun client designed
 to simplify interactions with Supabase's REST API, providing a seamless
 middleware solution for handling authenticated requests and Row Level Security
 (RLS) integrations.
 
-## 📦 Features
+## Features
 
 ### Authentication
 
@@ -34,13 +34,13 @@ middleware solution for handling authenticated requests and Row Level Security
 - TypeScript support with full type definitions
 - Error handling for Supabase API interactions
 
-## 🛠 Installation
+## Installation
 
 ```bash
 bun add github:jtclarkjr/supabase-ts-rest
 ```
 
-## 🔧 Quick Start
+## Quick Start
 
 ### Client Initialization
 
@@ -50,13 +50,42 @@ import { createClient } from '@jtclarkjr/supabase-rest-client'
 import type { SupabaseClient } from '@jtclarkjr/supabase-rest-client'
 
 const supabaseUrl = 'https://your-project.supabase.co'
-const supabaseKey = 'your-supabase-api-key'
+const supabaseKey = 'sb_publishable_your-key-here'
 const token = 'optional-user-access-token'
 
 const client = createClient(supabaseUrl, supabaseKey, token)
 ```
 
-## 🔐 Authentication Methods
+> Legacy JWT-format anon/service_role keys still work with no code changes —
+> just pass them as `supabaseKey` the same way.
+
+## API Keys
+
+This client accepts any Supabase API key format. Pick the one that matches where
+your code runs:
+
+| Key format            | Where it runs            | Replaces                  |
+| --------------------- | ------------------------ | ------------------------- |
+| `sb_publishable_...`  | Browser / client-side    | Legacy `anon` key         |
+| `sb_secret_...`       | Server only              | Legacy `service_role` key |
+| Legacy JWT (`eyJ...`) | Either (still supported) | —                         |
+
+**Never ship a `sb_secret_...` key to the browser** — it bypasses Row Level
+Security. Use the publishable key in client code and keep the secret key in
+server-side environments only.
+
+If you need to check a key's format programmatically (e.g., to guard a
+server-only code path), use the `detectKeyType` helper:
+
+```typescript
+import { detectKeyType } from '@jtclarkjr/supabase-rest-client'
+
+detectKeyType('sb_publishable_abc123') // 'publishable'
+detectKeyType('sb_secret_xyz789') // 'secret'
+detectKeyType('eyJhbGciOi...') // 'legacy'
+```
+
+## Authentication Methods
 
 ### Sign Up
 
@@ -118,7 +147,7 @@ const updatedUser = await client.updateUser({
 await client.signOut()
 ```
 
-## 📊 REST API Operations
+## REST API Operations
 
 ### GET Request
 
@@ -168,7 +197,7 @@ const patchedUser = await client.patch(
 const result = await client.delete('users', 'id', '123')
 ```
 
-## 🔧 Advanced Usage
+## Advanced Usage
 
 ### Token Management
 
@@ -213,14 +242,14 @@ client.setToken(authResponse.access_token)
 const userSpecificData = await client.get('user_profiles')
 ```
 
-## 📖 API Reference
+## API Reference
 
 ### Client Configuration
 
 ```typescript
 interface ClientConfig {
   baseUrl: string // Your Supabase project URL
-  apiKey: string // Your Supabase anon/public API key
+  apiKey: string // sb_publishable_..., sb_secret_..., or a legacy anon/service_role key
   token?: string // Optional JWT token for authenticated requests
 }
 ```
@@ -249,16 +278,20 @@ await client.get('users', { status: 'active', role: 'admin' })
 // GET /rest/v1/users?status=eq.active&role=eq.admin
 ```
 
-## 🛡️ Security Considerations
+## Security Considerations
 
-1. **API Key**: Use your public/anon key for client-side applications
+1. **API Key**: Use a publishable key (`sb_publishable_...`) or a legacy anon
+   key for client-side applications. Secret keys (`sb_secret_...`) and legacy
+   service_role keys bypass Row Level Security and must never ship to the
+   browser — keep them in server-side environments only.
 2. **JWT Tokens**: Store JWT tokens securely and refresh them before expiration
 3. **RLS**: Always implement Row Level Security policies in your Supabase
    database
 4. **Environment Variables**: Store sensitive configuration in environment
-   variables
+   variables (e.g., `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, or the
+   legacy `SUPABASE_ANON_KEY`)
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run tests
@@ -271,7 +304,7 @@ npm run test:watch
 npm test -- --coverage
 ```
 
-## 🔗 TypeScript Support
+## TypeScript Support
 
 This package includes full TypeScript definitions. Import types as needed:
 
@@ -285,6 +318,6 @@ import type {
 } from '@jtclarkjr/supabase-ts-rest'
 ```
 
-## 📝 License
+## License
 
 MIT

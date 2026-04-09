@@ -9,7 +9,10 @@
 import { createClient } from '../src'
 
 // Create a client
-const client = createClient('https://your-project.supabase.co', 'your-anon-key')
+const client = createClient(
+  'https://your-project.supabase.co',
+  'sb_publishable_your-key-here'
+)
 
 async function exampleUsage() {
   try {

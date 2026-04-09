@@ -5,11 +5,28 @@ export type SupabaseClient = ReturnType<typeof createSupabaseClient>
  */
 
 /**
- * Configuration options for the Supabase client
+ * The format of a Supabase API key.
+ *
+ * - `publishable` — new `sb_publishable_...` key. Client-safe. Replaces the legacy anon key.
+ * - `secret` — new `sb_secret_...` key. Server-only. Replaces the legacy service_role key.
+ * - `legacy` — legacy JWT-format anon or service_role key. Still supported by Supabase.
+ */
+export type KeyType = 'publishable' | 'secret' | 'legacy'
+
+/**
+ * Configuration options for the Supabase client.
  */
 export interface ClientConfig {
+  /** Your Supabase project URL (e.g., `https://your-project.supabase.co`). */
   baseUrl: string
+  /**
+   * A Supabase API key. Accepts any of:
+   * - `sb_publishable_...` (new, client-safe, recommended for browsers)
+   * - `sb_secret_...` (new, server-only)
+   * - a legacy JWT-format anon or service_role key (still supported)
+   */
   apiKey: string
+  /** Optional JWT access token for authenticated requests. */
   token?: string
 }
 

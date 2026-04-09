@@ -1,5 +1,6 @@
 import { createSupabaseClient } from '../client/index'
 import { createClient } from '../index'
+import { detectKeyType } from '../utils/keys/index'
 import { describe, expect, it } from 'bun:test'
 
 describe('SupabaseClient', () => {
@@ -61,5 +62,21 @@ describe('SupabaseClient', () => {
       client.setToken(newToken)
       expect(client.getToken()).toBe(newToken)
     })
+  })
+})
+
+describe('detectKeyType', () => {
+  it('detects publishable keys', () => {
+    expect(detectKeyType('sb_publishable_abc123')).toBe('publishable')
+  })
+
+  it('detects secret keys', () => {
+    expect(detectKeyType('sb_secret_xyz789')).toBe('secret')
+  })
+
+  it('classifies JWT-style keys as legacy', () => {
+    expect(detectKeyType('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.def')).toBe(
+      'legacy'
+    )
   })
 })
