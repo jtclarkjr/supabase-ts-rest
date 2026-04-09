@@ -6,13 +6,13 @@
  * handling authenticated requests and Row Level Security (RLS) integrations.
  */
 
-import type { SupabaseClient } from './types'
-import { createSupabaseClient } from './client/index'
+import type { SupabaseClient } from './types/index.js'
+import { createSupabaseClient } from './client/index.js'
 
-export * from './types'
-export * from './utils/constants'
+export * from './types/index.js'
+export * from './utils/constants/index.js'
 export { createSupabaseClient }
-export type { SupabaseClient } from './types'
+export type { SupabaseClient } from './types/index.js'
 
 /**
  * Creates a new Supabase REST client instance with authentication support.

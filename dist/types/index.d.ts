@@ -1,4 +1,4 @@
-import type { createSupabaseClient } from '../client';
+import type { createSupabaseClient } from '../client/index.js';
 export type SupabaseClient = ReturnType<typeof createSupabaseClient>;
 /**
  * Type definitions for Supabase REST client
@@ -11,6 +11,16 @@ export interface ClientConfig {
     apiKey: string;
     token?: string;
 }
+export interface AuthUser {
+    id: string;
+    email?: string;
+    phone?: string;
+    app_metadata?: Record<string, unknown>;
+    user_metadata?: Record<string, unknown>;
+    identities?: unknown[];
+    is_anonymous?: boolean;
+    [key: string]: unknown;
+}
 /**
  * Response from authentication token endpoint
  */
@@ -19,6 +29,10 @@ export interface AuthTokenResponse {
     token_type: string;
     expires_in: number;
     refresh_token: string;
+    expires_at?: number;
+}
+export interface AuthSessionResponse extends AuthTokenResponse {
+    user: AuthUser;
 }
 /**
  * Payload for token requests
@@ -28,6 +42,26 @@ export interface TokenRequestPayload {
     password?: string;
     refresh_token?: string;
     grant_type?: string;
+    data?: Record<string, unknown>;
+    gotrue_meta_security?: Record<string, unknown>;
+    code_challenge?: string | null;
+    code_challenge_method?: string | null;
+}
+export interface SignUpOptions {
+    data?: Record<string, unknown>;
+}
+export interface AnonymousSignInOptions {
+    data?: Record<string, unknown>;
+}
+export type OAuthProvider = 'github' | 'google' | 'apple';
+export interface OAuthSignInOptions {
+    redirectTo?: string;
+    scopes?: string;
+    queryParams?: QueryParams;
+}
+export interface OAuthSignInResponse {
+    provider: OAuthProvider;
+    url: string;
 }
 /**
  * Payload for magic link requests
@@ -47,7 +81,7 @@ export interface VerifyOTPPayload {
  * Generic query parameters object
  */
 export interface QueryParams {
-    [key: string]: string;
+    [key: string]: string | undefined;
 }
 /**
  * HTTP method types

@@ -1,4 +1,4 @@
-import { ClientConfig, AuthTokenResponse, TokenRequestPayload, QueryParams, HttpMethod } from '../types';
+import { ClientConfig, AuthTokenResponse, AuthSessionResponse, TokenRequestPayload, QueryParams, HttpMethod, SignUpOptions, AnonymousSignInOptions, OAuthProvider, OAuthSignInOptions, OAuthSignInResponse } from '../types/index.js';
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
  */
@@ -15,7 +15,9 @@ export declare function createSupabaseClient(config: ClientConfig): {
     /** Auth request method. */
     auth: (endpoint: string, payload: TokenRequestPayload) => Promise<AuthTokenResponse>;
     /** Registers a new user with email and password. */
-    signUp(email: string, password: string): Promise<unknown>;
+    signUp(email: string, password: string, options?: SignUpOptions): Promise<AuthSessionResponse>;
+    /** Starts an anonymous authenticated session. */
+    signInAnonymously(options?: AnonymousSignInOptions): Promise<AuthSessionResponse>;
     /** Signs in a user with email and password. */
     signIn(email: string, password: string): Promise<AuthTokenResponse>;
     /** Refreshes the authentication token. */
@@ -26,12 +28,14 @@ export declare function createSupabaseClient(config: ClientConfig): {
     sendPasswordRecovery(email: string): Promise<unknown>;
     /** Verifies an OTP code. */
     verifyOTP(email: string, tokenValue: string, otpType: string): Promise<unknown>;
+    /** Builds an OAuth authorize URL for a provider. */
+    getOAuthSignInUrl(provider: OAuthProvider, options?: OAuthSignInOptions): OAuthSignInResponse;
     /** Gets the current authenticated user. */
     getUser(): Promise<unknown>;
     /** Updates the current user's information. */
     updateUser(payload: Record<string, unknown>): Promise<unknown>;
     /** Signs out the current user. */
-    signOut(): Promise<unknown>;
+    signOut(scope?: "global" | "local" | "others"): Promise<unknown>;
     /** Invites a new user by email. */
     inviteUser(email: string): Promise<unknown>;
     /** Resets a user's password using a reset token. */

@@ -1,33 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createSupabaseClient = createSupabaseClient;
-const types_1 = require("../types");
-const constants_1 = require("../utils/constants");
+import { SupabaseError } from '../types/index.js';
+import { TOKEN_API_PATH, SIGNUP_API_PATH, MAGIC_LINK_API_PATH, RECOVER_API_PATH, VERIFY_API_PATH, USER_API_PATH, LOGOUT_API_PATH, INVITE_API_PATH, RESET_API_PATH, ERROR_MESSAGES } from '../utils/constants/index.js';
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
  */
-function createSupabaseClient(config) {
+export function createSupabaseClient(config) {
     if (!config.baseUrl || !config.apiKey) {
-        throw new types_1.SupabaseError(constants_1.ERROR_MESSAGES.INVALID_CONFIG);
+        throw new SupabaseError(ERROR_MESSAGES.INVALID_CONFIG);
     }
-    let baseUrl = config.baseUrl;
+    let baseUrl = config.baseUrl.replace(/\/+$/, '');
     let apiKey = config.apiKey;
     let token = config.token;
     // Core HTTP request method
     async function request(method, endpoint, body, queryParams) {
-        // Build URL
-        let url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${endpoint}`;
-        if (queryParams && Object.keys(queryParams).length > 0) {
-            const params = new URLSearchParams(queryParams).toString();
-            url += (url.includes('?') ? '&' : '?') + params;
-        }
-        // Prepare headers
+        const url = buildUrl(endpoint, queryParams);
         const headers = {
             apikey: apiKey,
             Authorization: `Bearer ${token || apiKey}`,
             'Content-Type': 'application/json'
         };
-        // Prepare fetch options
         const options = {
             method,
             headers
@@ -39,7 +29,34 @@ function createSupabaseClient(config) {
         const response = await fetch(url, options);
         if (!response.ok) {
             const text = await response.text();
-            throw new types_1.SupabaseError(`Request failed: ${response.status} ${text}`);
+            throw new SupabaseError(`Request failed: ${response.status} ${text}`);
+        }
+        const text = await response.text();
+        try {
+            return text ? JSON.parse(text) : {};
+        }
+        catch {
+            return text;
+        }
+    }
+    async function publicRequest(method, endpoint, body, queryParams) {
+        const url = buildUrl(endpoint, queryParams);
+        const headers = {
+            apikey: apiKey,
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        };
+        const options = {
+            method,
+            headers
+        };
+        if (body !== undefined) {
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const text = await response.text();
+            throw new SupabaseError(`Request failed: ${response.status} ${text}`);
         }
         const text = await response.text();
         try {
@@ -53,10 +70,10 @@ function createSupabaseClient(config) {
     async function auth(endpoint, payload) {
         const url = endpoint.startsWith('http')
             ? endpoint
-            : `${baseUrl}/${endpoint}`;
+            : `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
         const headers = {
             apikey: apiKey,
-            Authorization: `Bearer ${token || apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
         };
         const response = await fetch(url, {
@@ -66,9 +83,27 @@ function createSupabaseClient(config) {
         });
         if (!response.ok) {
             const text = await response.text();
-            throw new types_1.SupabaseError(`Auth request failed: ${response.status} ${text}`);
+            throw new SupabaseError(`Auth request failed: ${response.status} ${text}`);
         }
         return response.json();
+    }
+    function buildUrl(endpoint, queryParams) {
+        let url = endpoint.startsWith('http')
+            ? endpoint
+            : `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+        if (queryParams) {
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(queryParams)) {
+                if (typeof value === 'string') {
+                    params.set(key, value);
+                }
+            }
+            const query = params.toString();
+            if (query) {
+                url += (url.includes('?') ? '&' : '?') + query;
+            }
+        }
+        return url;
     }
     // Return the client object with all methods defined directly
     return {
@@ -91,32 +126,46 @@ function createSupabaseClient(config) {
         auth,
         // Auth methods
         /** Registers a new user with email and password. */
-        async signUp(email, password) {
-            const payload = { email, password };
-            const path = `${constants_1.SIGNUP_API_PATH}?grant_type=signup`;
-            return request('POST', path, payload);
+        async signUp(email, password, options = {}) {
+            const payload = {
+                email,
+                password,
+                data: options.data ?? {},
+                gotrue_meta_security: {},
+                code_challenge: null,
+                code_challenge_method: null
+            };
+            return publicRequest('POST', SIGNUP_API_PATH, payload);
+        },
+        /** Starts an anonymous authenticated session. */
+        async signInAnonymously(options = {}) {
+            const payload = {
+                data: options.data ?? {},
+                gotrue_meta_security: {}
+            };
+            return publicRequest('POST', SIGNUP_API_PATH, payload);
         },
         /** Signs in a user with email and password. */
         async signIn(email, password) {
             const payload = { email, password };
-            const path = `${constants_1.TOKEN_API_PATH}?grant_type=password`;
+            const path = `${TOKEN_API_PATH}?grant_type=password`;
             return auth(path, payload);
         },
         /** Refreshes the authentication token. */
         async refreshToken(refreshTokenValue) {
             const payload = { refresh_token: refreshTokenValue };
-            const path = `${constants_1.TOKEN_API_PATH}?grant_type=refresh_token`;
+            const path = `${TOKEN_API_PATH}?grant_type=refresh_token`;
             return auth(path, payload);
         },
         /** Sends a magic link for passwordless sign-in. */
         async sendMagicLink(email) {
             const payload = { email };
-            return request('POST', constants_1.MAGIC_LINK_API_PATH, payload);
+            return publicRequest('POST', MAGIC_LINK_API_PATH, payload);
         },
         /** Sends a password recovery email. */
         async sendPasswordRecovery(email) {
             const payload = { email };
-            return request('POST', constants_1.RECOVER_API_PATH, payload);
+            return publicRequest('POST', RECOVER_API_PATH, payload);
         },
         /** Verifies an OTP code. */
         async verifyOTP(email, tokenValue, otpType) {
@@ -125,30 +174,43 @@ function createSupabaseClient(config) {
                 token: tokenValue,
                 type: otpType
             };
-            return request('POST', constants_1.VERIFY_API_PATH, payload);
+            return publicRequest('POST', VERIFY_API_PATH, payload);
+        },
+        /** Builds an OAuth authorize URL for a provider. */
+        getOAuthSignInUrl(provider, options = {}) {
+            const url = buildUrl(`${SIGNUP_API_PATH.replace('/signup', '/authorize')}`, {
+                provider,
+                redirect_to: options.redirectTo,
+                scopes: options.scopes,
+                ...options.queryParams
+            });
+            return {
+                provider,
+                url
+            };
         },
         // User methods
         /** Gets the current authenticated user. */
         async getUser() {
-            return request('GET', constants_1.USER_API_PATH);
+            return request('GET', USER_API_PATH);
         },
         /** Updates the current user's information. */
         async updateUser(payload) {
-            return request('PUT', constants_1.USER_API_PATH, payload);
+            return request('PUT', USER_API_PATH, payload);
         },
         /** Signs out the current user. */
-        async signOut() {
-            return request('POST', constants_1.LOGOUT_API_PATH);
+        async signOut(scope = 'global') {
+            return request('POST', `${LOGOUT_API_PATH}?scope=${scope}`);
         },
         /** Invites a new user by email. */
         async inviteUser(email) {
             const payload = { email };
-            return request('POST', constants_1.INVITE_API_PATH, payload);
+            return publicRequest('POST', INVITE_API_PATH, payload);
         },
         /** Resets a user's password using a reset token. */
         async resetPassword(tokenValue, newPassword) {
             const payload = { token: tokenValue, password: newPassword };
-            const path = `${constants_1.RESET_API_PATH}?grant_type=reset_password`;
+            const path = `${RESET_API_PATH}?grant_type=reset_password`;
             return request('POST', path, payload);
         },
         // REST methods
@@ -182,16 +244,16 @@ function createSupabaseClient(config) {
             return this.del;
         },
         // Constants for compatibility
-        TOKEN_API_PATH: constants_1.TOKEN_API_PATH,
-        SIGNUP_API_PATH: constants_1.SIGNUP_API_PATH,
-        MAGIC_LINK_API_PATH: constants_1.MAGIC_LINK_API_PATH,
-        RECOVER_API_PATH: constants_1.RECOVER_API_PATH,
-        VERIFY_API_PATH: constants_1.VERIFY_API_PATH,
-        USER_API_PATH: constants_1.USER_API_PATH,
-        LOGOUT_API_PATH: constants_1.LOGOUT_API_PATH,
-        INVITE_API_PATH: constants_1.INVITE_API_PATH,
-        RESET_API_PATH: constants_1.RESET_API_PATH,
-        ERROR_MESSAGES: constants_1.ERROR_MESSAGES
+        TOKEN_API_PATH,
+        SIGNUP_API_PATH,
+        MAGIC_LINK_API_PATH,
+        RECOVER_API_PATH,
+        VERIFY_API_PATH,
+        USER_API_PATH,
+        LOGOUT_API_PATH,
+        INVITE_API_PATH,
+        RESET_API_PATH,
+        ERROR_MESSAGES
     };
 }
 //# sourceMappingURL=index.js.map

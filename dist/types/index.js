@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SupabaseError = void 0;
 /**
  * Custom error class for Supabase client errors
  */
-class SupabaseError extends Error {
+export class SupabaseError extends Error {
     statusCode;
     response;
     constructor(message, statusCode, response) {
@@ -14,5 +11,4 @@ class SupabaseError extends Error {
         this.name = 'SupabaseError';
     }
 }
-exports.SupabaseError = SupabaseError;
 //# sourceMappingURL=index.js.map

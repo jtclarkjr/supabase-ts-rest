@@ -2,8 +2,12 @@
   "name": "@jtclarkjr/supabase-ts-rest",
   "version": "0.2.4",
   "description": "A lightweight TypeScript client for Supabase REST API with authentication support",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "scripts": {
     "build": "bun run tsc",
     "test": "bun test",
@@ -31,7 +35,8 @@
     "directory": "npm"
   },
   "files": [
-    "dist/**/*",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
     "README.md",
     "LICENSE"
   ],
