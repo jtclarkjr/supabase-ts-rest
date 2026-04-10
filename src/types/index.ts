@@ -63,11 +63,13 @@ export interface TokenRequestPayload {
   email?: string
   password?: string
   refresh_token?: string
+  auth_code?: string
   grant_type?: string
   data?: Record<string, unknown>
   gotrue_meta_security?: Record<string, unknown>
   code_challenge?: string | null
   code_challenge_method?: string | null
+  code_verifier?: string | null
 }
 
 export interface SignUpOptions {

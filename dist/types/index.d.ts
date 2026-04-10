@@ -4,11 +4,27 @@ export type SupabaseClient = ReturnType<typeof createSupabaseClient>;
  * Type definitions for Supabase REST client
  */
 /**
- * Configuration options for the Supabase client
+ * The format of a Supabase API key.
+ *
+ * - `publishable` — new `sb_publishable_...` key. Client-safe. Replaces the legacy anon key.
+ * - `secret` — new `sb_secret_...` key. Server-only. Replaces the legacy service_role key.
+ * - `legacy` — legacy JWT-format anon or service_role key. Still supported by Supabase.
+ */
+export type KeyType = 'publishable' | 'secret' | 'legacy';
+/**
+ * Configuration options for the Supabase client.
  */
 export interface ClientConfig {
+    /** Your Supabase project URL (e.g., `https://your-project.supabase.co`). */
     baseUrl: string;
+    /**
+     * A Supabase API key. Accepts any of:
+     * - `sb_publishable_...` (new, client-safe, recommended for browsers)
+     * - `sb_secret_...` (new, server-only)
+     * - a legacy JWT-format anon or service_role key (still supported)
+     */
     apiKey: string;
+    /** Optional JWT access token for authenticated requests. */
     token?: string;
 }
 export interface AuthUser {
@@ -41,11 +57,13 @@ export interface TokenRequestPayload {
     email?: string;
     password?: string;
     refresh_token?: string;
+    auth_code?: string;
     grant_type?: string;
     data?: Record<string, unknown>;
     gotrue_meta_security?: Record<string, unknown>;
     code_challenge?: string | null;
     code_challenge_method?: string | null;
+    code_verifier?: string | null;
 }
 export interface SignUpOptions {
     data?: Record<string, unknown>;

@@ -22,6 +22,8 @@ export declare function createSupabaseClient(config: ClientConfig): {
     signIn(email: string, password: string): Promise<AuthTokenResponse>;
     /** Refreshes the authentication token. */
     refreshToken(refreshTokenValue: string): Promise<AuthTokenResponse>;
+    /** Exchanges an OAuth authorization code for a session token pair. */
+    exchangeCodeForSession(authCode: string, codeVerifier: string): Promise<AuthTokenResponse>;
     /** Sends a magic link for passwordless sign-in. */
     sendMagicLink(email: string): Promise<unknown>;
     /** Sends a password recovery email. */

@@ -157,6 +157,15 @@ export function createSupabaseClient(config) {
             const path = `${TOKEN_API_PATH}?grant_type=refresh_token`;
             return auth(path, payload);
         },
+        /** Exchanges an OAuth authorization code for a session token pair. */
+        async exchangeCodeForSession(authCode, codeVerifier) {
+            const payload = {
+                auth_code: authCode,
+                code_verifier: codeVerifier
+            };
+            const path = `${TOKEN_API_PATH}?grant_type=pkce`;
+            return auth(path, payload);
+        },
         /** Sends a magic link for passwordless sign-in. */
         async sendMagicLink(email) {
             const payload = { email };

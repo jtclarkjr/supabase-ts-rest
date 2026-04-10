@@ -9,6 +9,7 @@ import type { SupabaseClient } from './types/index.js';
 import { createSupabaseClient } from './client/index.js';
 export * from './types/index.js';
 export * from './utils/constants/index.js';
+export * from './utils/keys/index.js';
 export { createSupabaseClient };
 export type { SupabaseClient } from './types/index.js';
 /**
@@ -19,7 +20,8 @@ export type { SupabaseClient } from './types/index.js';
  * Row Level Security (RLS) token handling.
  *
  * @param baseUrl - Your Supabase project URL (e.g., "https://your-project.supabase.co")
- * @param apiKey - Your Supabase anon/public API key
+ * @param apiKey - Your Supabase API key. Accepts `sb_publishable_...` (recommended for
+ *   browsers), `sb_secret_...` (server only), or a legacy anon/service_role key.
  * @param token - Optional JWT token for authenticated requests
  * @returns A SupabaseClient instance with methods for auth, user management, and REST operations
  *
@@ -29,7 +31,7 @@ export type { SupabaseClient } from './types/index.js';
  *
  * const client = createClient(
  *   'https://your-project.supabase.co',
- *   'your-supabase-anon-key'
+ *   'sb_publishable_your-key-here'
  * );
  *
  * // Authenticate user
@@ -43,10 +45,11 @@ export type { SupabaseClient } from './types/index.js';
  *
  * @example
  * ```typescript
- * // Environment-based configuration
+ * // Environment-based configuration.
+ * // Legacy SUPABASE_ANON_KEY is still supported with no code changes.
  * const client = createClient(
  *   process.env.SUPABASE_URL!,
- *   process.env.SUPABASE_ANON_KEY!
+ *   process.env.SUPABASE_PUBLISHABLE_KEY!
  * );
  *
  * // Magic link authentication

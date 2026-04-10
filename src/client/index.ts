@@ -224,6 +224,19 @@ export function createSupabaseClient(config: ClientConfig) {
       return auth(path, payload)
     },
 
+    /** Exchanges an OAuth authorization code for a session token pair. */
+    async exchangeCodeForSession(
+      authCode: string,
+      codeVerifier: string
+    ): Promise<AuthTokenResponse> {
+      const payload: TokenRequestPayload = {
+        auth_code: authCode,
+        code_verifier: codeVerifier
+      }
+      const path = `${TOKEN_API_PATH}?grant_type=pkce`
+      return auth(path, payload)
+    },
+
     /** Sends a magic link for passwordless sign-in. */
     async sendMagicLink(email: string): Promise<unknown> {
       const payload: MagicLinkPayload = { email }
