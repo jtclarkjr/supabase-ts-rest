@@ -71,7 +71,7 @@ export interface SignUpOptions {
 export interface AnonymousSignInOptions {
     data?: Record<string, unknown>;
 }
-export type OAuthProvider = 'github' | 'google' | 'apple';
+export type OAuthProvider = 'apple' | 'azure' | 'bitbucket' | 'discord' | 'facebook' | 'figma' | 'github' | 'gitlab' | 'google' | 'kakao' | 'keycloak' | 'linkedin_oidc' | 'notion' | 'twitch' | 'twitter' | 'slack_oidc' | 'slack' | 'spotify' | 'workos' | 'zoom';
 export interface OAuthSignInOptions {
     redirectTo?: string;
     scopes?: string;
