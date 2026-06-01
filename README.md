@@ -90,7 +90,11 @@ detectKeyType('eyJhbGciOi...') // 'legacy'
 ### Sign Up
 
 ```typescript
-const result = await client.signUp('user@example.com', 'password123')
+const result = await client.signUp('user@example.com', 'password123', {
+  data: { name: 'User Name' },
+  captchaToken: 'optional-captcha-token',
+  redirectTo: 'https://app.example.com/auth/callback'
+})
 console.log(result)
 ```
 

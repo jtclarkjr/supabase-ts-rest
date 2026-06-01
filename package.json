@@ -1,6 +1,6 @@
 {
   "name": "@jtclarkjr/supabase-ts-rest",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A lightweight TypeScript client for Supabase REST API with authentication support",
   "type": "module",
   "main": "dist/index.js",

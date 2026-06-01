@@ -10,6 +10,37 @@ export function createSupabaseClient(config) {
     let baseUrl = config.baseUrl.replace(/\/+$/, '');
     let apiKey = config.apiKey;
     let token = config.token;
+    function parseResponseBody(text) {
+        if (!text) {
+            return {};
+        }
+        try {
+            return JSON.parse(text);
+        }
+        catch {
+            return text;
+        }
+    }
+    function pickErrorMessage(value) {
+        if (!value || typeof value !== 'object') {
+            return null;
+        }
+        const payload = value;
+        const keys = ['msg', 'message', 'error_description', 'error'];
+        for (const key of keys) {
+            const nextValue = payload[key];
+            if (typeof nextValue === 'string' && nextValue.trim()) {
+                return nextValue.trim();
+            }
+        }
+        return null;
+    }
+    function createRequestError(prefix, response, text) {
+        const parsed = parseResponseBody(text);
+        const message = pickErrorMessage(parsed) ?? text.trim();
+        const suffix = message ? ` ${message}` : '';
+        return new SupabaseError(`${prefix}: ${response.status}${suffix}`, response.status, parsed);
+    }
     // Core HTTP request method
     async function request(method, endpoint, body, queryParams) {
         const url = buildUrl(endpoint, queryParams);
@@ -29,15 +60,10 @@ export function createSupabaseClient(config) {
         const response = await fetch(url, options);
         if (!response.ok) {
             const text = await response.text();
-            throw new SupabaseError(`Request failed: ${response.status} ${text}`);
+            throw createRequestError('Request failed', response, text);
         }
         const text = await response.text();
-        try {
-            return text ? JSON.parse(text) : {};
-        }
-        catch {
-            return text;
-        }
+        return parseResponseBody(text);
     }
     async function publicRequest(method, endpoint, body, queryParams) {
         const url = buildUrl(endpoint, queryParams);
@@ -56,15 +82,10 @@ export function createSupabaseClient(config) {
         const response = await fetch(url, options);
         if (!response.ok) {
             const text = await response.text();
-            throw new SupabaseError(`Request failed: ${response.status} ${text}`);
+            throw createRequestError('Request failed', response, text);
         }
         const text = await response.text();
-        try {
-            return text ? JSON.parse(text) : {};
-        }
-        catch {
-            return text;
-        }
+        return parseResponseBody(text);
     }
     // Auth request method
     async function auth(endpoint, payload) {
@@ -83,7 +104,7 @@ export function createSupabaseClient(config) {
         });
         if (!response.ok) {
             const text = await response.text();
-            throw new SupabaseError(`Auth request failed: ${response.status} ${text}`);
+            throw createRequestError('Auth request failed', response, text);
         }
         return response.json();
     }
@@ -127,15 +148,22 @@ export function createSupabaseClient(config) {
         // Auth methods
         /** Registers a new user with email and password. */
         async signUp(email, password, options = {}) {
+            const gotrueMetaSecurity = {};
+            if (options.captchaToken) {
+                gotrueMetaSecurity.captcha_token = options.captchaToken;
+            }
             const payload = {
                 email,
                 password,
                 data: options.data ?? {},
-                gotrue_meta_security: {},
+                gotrue_meta_security: gotrueMetaSecurity,
                 code_challenge: null,
                 code_challenge_method: null
             };
-            return publicRequest('POST', SIGNUP_API_PATH, payload);
+            const queryParams = options.redirectTo
+                ? { redirect_to: options.redirectTo }
+                : undefined;
+            return publicRequest('POST', SIGNUP_API_PATH, payload, queryParams);
         },
         /** Starts an anonymous authenticated session. */
         async signInAnonymously(options = {}) {

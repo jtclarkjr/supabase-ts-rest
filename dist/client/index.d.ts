@@ -1,4 +1,4 @@
-import { ClientConfig, AuthTokenResponse, AuthSessionResponse, TokenRequestPayload, QueryParams, HttpMethod, SignUpOptions, AnonymousSignInOptions, OAuthProvider, OAuthSignInOptions, OAuthSignInResponse } from '../types/index.js';
+import { ClientConfig, AuthTokenResponse, AuthSessionResponse, AuthSignUpResponse, TokenRequestPayload, QueryParams, HttpMethod, SignUpOptions, AnonymousSignInOptions, OAuthProvider, OAuthSignInOptions, OAuthSignInResponse } from '../types/index.js';
 /**
  * Creates a new Supabase client instance with authentication, user, and REST methods.
  */
@@ -15,7 +15,7 @@ export declare function createSupabaseClient(config: ClientConfig): {
     /** Auth request method. */
     auth: (endpoint: string, payload: TokenRequestPayload) => Promise<AuthTokenResponse>;
     /** Registers a new user with email and password. */
-    signUp(email: string, password: string, options?: SignUpOptions): Promise<AuthSessionResponse>;
+    signUp(email: string, password: string, options?: SignUpOptions): Promise<AuthSignUpResponse>;
     /** Starts an anonymous authenticated session. */
     signInAnonymously(options?: AnonymousSignInOptions): Promise<AuthSessionResponse>;
     /** Signs in a user with email and password. */

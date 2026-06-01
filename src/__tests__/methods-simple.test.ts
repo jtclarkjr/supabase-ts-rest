@@ -1,5 +1,5 @@
 import { createSupabaseClient, SupabaseClient } from '../client/index'
-import { AuthTokenResponse } from '../types'
+import { AuthTokenResponse, SupabaseError } from '../types'
 import { describe, expect, it, beforeEach } from 'bun:test'
 
 describe('SupabaseClient Methods', () => {
@@ -21,8 +21,14 @@ describe('SupabaseClient Methods', () => {
 
   describe('Authentication Methods', () => {
     describe('signUp', () => {
-      it('should sign up a user successfully', async () => {
-        const mockResponse = { id: 'new-user' }
+      it('should return a signup session response', async () => {
+        const mockResponse = {
+          access_token: 'signup_access_token',
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: 'signup_refresh_token',
+          user: { id: 'new-user', email: 'test@example.com' }
+        }
 
         // Mock fetch for this test (Bun compatibility)
         const fetchMock = Object.assign(
@@ -42,6 +48,96 @@ describe('SupabaseClient Methods', () => {
         const result = await client.signUp(email, password)
 
         expect(result).toEqual(mockResponse)
+      })
+
+      it('should return a signup confirmation response without a session', async () => {
+        const mockResponse = { id: 'new-user', email: 'test@example.com' }
+
+        const fetchMock = Object.assign(
+          () =>
+            Promise.resolve(
+              new Response(JSON.stringify(mockResponse), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              })
+            ),
+          { preconnect: () => Promise.resolve() }
+        )
+        globalThis.fetch = fetchMock
+
+        const result = await client.signUp('test@example.com', 'password123')
+
+        expect(result).toEqual(mockResponse)
+      })
+
+      it('should send signup metadata, captcha token, and redirect URL', async () => {
+        const mockResponse = { id: 'new-user', email: 'test@example.com' }
+
+        const fetchMock = Object.assign(
+          (input: RequestInfo | URL, init?: RequestInit) => {
+            const url = new URL(typeof input === 'string' ? input : input.toString())
+            const body = JSON.parse(String(init?.body))
+
+            expect(url.pathname).toBe('/auth/v1/signup')
+            expect(url.searchParams.get('redirect_to')).toBe(
+              'https://app.example.com/auth/callback'
+            )
+            expect(body).toEqual({
+              email: 'test@example.com',
+              password: 'password123',
+              data: { name: 'Test User' },
+              gotrue_meta_security: { captcha_token: 'captcha-token' },
+              code_challenge: null,
+              code_challenge_method: null
+            })
+
+            return Promise.resolve(
+              new Response(JSON.stringify(mockResponse), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              })
+            )
+          },
+          { preconnect: () => Promise.resolve() }
+        )
+        globalThis.fetch = fetchMock
+
+        const result = await client.signUp('test@example.com', 'password123', {
+          data: { name: 'Test User' },
+          captchaToken: 'captcha-token',
+          redirectTo: 'https://app.example.com/auth/callback'
+        })
+
+        expect(result).toEqual(mockResponse)
+      })
+
+      it('should include status and parsed response in signup errors', async () => {
+        const responseBody = {
+          code: 'over_email_send_rate_limit',
+          msg: 'Email rate limit exceeded'
+        }
+
+        const fetchMock = Object.assign(
+          () =>
+            Promise.resolve(
+              new Response(JSON.stringify(responseBody), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json' }
+              })
+            ),
+          { preconnect: () => Promise.resolve() }
+        )
+        globalThis.fetch = fetchMock
+
+        try {
+          await client.signUp('test@example.com', 'password123')
+          throw new Error('Expected signUp to throw')
+        } catch (error) {
+          expect(error).toBeInstanceOf(SupabaseError)
+          expect((error as SupabaseError).statusCode).toBe(429)
+          expect((error as SupabaseError).response).toEqual(responseBody)
+          expect((error as Error).message).toContain('Email rate limit exceeded')
+        }
       })
     })
 

@@ -50,6 +50,10 @@ export interface AuthTokenResponse {
 export interface AuthSessionResponse extends AuthTokenResponse {
     user: AuthUser;
 }
+export type AuthSignUpResponse = AuthSessionResponse | AuthUser | {
+    user: AuthUser;
+    session: AuthSessionResponse | null;
+};
 /**
  * Payload for token requests
  */
@@ -67,6 +71,8 @@ export interface TokenRequestPayload {
 }
 export interface SignUpOptions {
     data?: Record<string, unknown>;
+    captchaToken?: string;
+    redirectTo?: string;
 }
 export interface AnonymousSignInOptions {
     data?: Record<string, unknown>;

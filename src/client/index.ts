@@ -2,6 +2,7 @@ import {
   ClientConfig,
   AuthTokenResponse,
   AuthSessionResponse,
+  AuthSignUpResponse,
   TokenRequestPayload,
   MagicLinkPayload,
   VerifyOTPPayload,
@@ -39,6 +40,51 @@ export function createSupabaseClient(config: ClientConfig) {
   let apiKey = config.apiKey
   let token = config.token
 
+  function parseResponseBody(text: string): unknown {
+    if (!text) {
+      return {}
+    }
+
+    try {
+      return JSON.parse(text)
+    } catch {
+      return text
+    }
+  }
+
+  function pickErrorMessage(value: unknown): string | null {
+    if (!value || typeof value !== 'object') {
+      return null
+    }
+
+    const payload = value as Record<string, unknown>
+    const keys = ['msg', 'message', 'error_description', 'error'] as const
+    for (const key of keys) {
+      const nextValue = payload[key]
+      if (typeof nextValue === 'string' && nextValue.trim()) {
+        return nextValue.trim()
+      }
+    }
+
+    return null
+  }
+
+  function createRequestError(
+    prefix: string,
+    response: Response,
+    text: string
+  ): SupabaseError {
+    const parsed = parseResponseBody(text)
+    const message = pickErrorMessage(parsed) ?? text.trim()
+    const suffix = message ? ` ${message}` : ''
+
+    return new SupabaseError(
+      `${prefix}: ${response.status}${suffix}`,
+      response.status,
+      parsed
+    )
+  }
+
   // Core HTTP request method
   async function request(
     method: HttpMethod,
@@ -63,14 +109,10 @@ export function createSupabaseClient(config: ClientConfig) {
     const response = await fetch(url, options)
     if (!response.ok) {
       const text = await response.text()
-      throw new SupabaseError(`Request failed: ${response.status} ${text}`)
+      throw createRequestError('Request failed', response, text)
     }
     const text = await response.text()
-    try {
-      return text ? JSON.parse(text) : {}
-    } catch {
-      return text
-    }
+    return parseResponseBody(text)
   }
 
   async function publicRequest(
@@ -95,14 +137,10 @@ export function createSupabaseClient(config: ClientConfig) {
     const response = await fetch(url, options)
     if (!response.ok) {
       const text = await response.text()
-      throw new SupabaseError(`Request failed: ${response.status} ${text}`)
+      throw createRequestError('Request failed', response, text)
     }
     const text = await response.text()
-    try {
-      return text ? JSON.parse(text) : {}
-    } catch {
-      return text
-    }
+    return parseResponseBody(text)
   }
 
   // Auth request method
@@ -125,7 +163,7 @@ export function createSupabaseClient(config: ClientConfig) {
     })
     if (!response.ok) {
       const text = await response.text()
-      throw new SupabaseError(`Auth request failed: ${response.status} ${text}`)
+      throw createRequestError('Auth request failed', response, text)
     }
     return response.json()
   }
@@ -179,20 +217,31 @@ export function createSupabaseClient(config: ClientConfig) {
       email: string,
       password: string,
       options: SignUpOptions = {}
-    ): Promise<AuthSessionResponse> {
+    ): Promise<AuthSignUpResponse> {
+      const gotrueMetaSecurity: Record<string, unknown> = {}
+      if (options.captchaToken) {
+        gotrueMetaSecurity.captcha_token = options.captchaToken
+      }
+
       const payload: TokenRequestPayload = {
         email,
         password,
         data: options.data ?? {},
-        gotrue_meta_security: {},
+        gotrue_meta_security: gotrueMetaSecurity,
         code_challenge: null,
         code_challenge_method: null
       }
+
+      const queryParams = options.redirectTo
+        ? { redirect_to: options.redirectTo }
+        : undefined
+
       return publicRequest(
         'POST',
         SIGNUP_API_PATH,
-        payload
-      ) as Promise<AuthSessionResponse>
+        payload,
+        queryParams
+      ) as Promise<AuthSignUpResponse>
     },
 
     /** Starts an anonymous authenticated session. */
