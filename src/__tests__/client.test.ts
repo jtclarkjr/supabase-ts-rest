@@ -1,7 +1,7 @@
 import { createSupabaseClient } from '../client/index'
 import { createClient } from '../index'
 import { detectKeyType } from '../utils/keys/index'
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 
 describe('SupabaseClient', () => {
   const baseUrl = 'https://example.supabase.co'

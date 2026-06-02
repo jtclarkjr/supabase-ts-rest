@@ -3,21 +3,24 @@
   "version": "0.2.7",
   "description": "A lightweight TypeScript client for Supabase REST API with authentication support",
   "type": "module",
+  "packageManager": "bun@1.3.14",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "build": "tsgo",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "lint": "oxlint src/**/*.ts",
-    "lint:fix": "oxlint src/**/*.ts --fix",
-    "fmt": "oxfmt --write .",
-    "prepublishOnly": "bun run build",
-    "dev": "tsgo --watch",
-    "typecheck": "tsgo --noEmit"
+    "build": "vp pack",
+    "test": "vp test",
+    "test:watch": "vp test watch",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "fmt": "vp fmt . --write",
+    "check": "vp check --fix"
   },
   "keywords": [
     "supabase",
@@ -38,17 +41,15 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
+    "dist/**/*.map",
     "README.md",
     "LICENSE"
   ],
   "devDependencies": {
-    "@types/bun": "^1.3.11",
-    "@typescript/native-preview": "latest",
-    "oxfmt": "^0.42.0",
-    "oxlint": "^1.11.2"
+    "vite-plus": "0.1.24"
   },
   "dependencies": {},
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }

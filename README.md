@@ -295,17 +295,20 @@ await client.get('users', { status: 'active', role: 'admin' })
    variables (e.g., `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, or the
    legacy `SUPABASE_ANON_KEY`)
 
-## Testing
+## Development
 
 ```bash
 # Run tests
-npm test
+vp test
 
 # Run tests in watch mode
-npm run test:watch
+vp test watch
 
-# Run with coverage
-npm test -- --coverage
+# Run checks
+vp check
+
+# Build the library package
+vp pack
 ```
 
 ## TypeScript Support

@@ -412,8 +412,13 @@ export function createSupabaseClient(config: ClientConfig) {
     },
 
     /** Alias for the REST delete method. */
-    get delete() {
-      return this.del
+    async delete(
+      endpoint: string,
+      primaryKeyName: string,
+      primaryKeyValue: string
+    ): Promise<unknown> {
+      const queryParams = { [primaryKeyName]: primaryKeyValue }
+      return request('DELETE', endpoint, queryParams)
     },
 
     // Constants for compatibility

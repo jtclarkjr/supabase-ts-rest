@@ -1,6 +1,28 @@
-import { createSupabaseClient, SupabaseClient } from '../client/index'
-import { AuthTokenResponse, SupabaseError } from '../types'
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { createSupabaseClient } from '../client/index'
+import type { AuthTokenResponse, SupabaseClient } from '../types'
+import { SupabaseError } from '../types'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+
+const mockFetch = (
+  implementation: (
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ) => Promise<Response>
+) => {
+  vi.stubGlobal('fetch', vi.fn(implementation))
+}
+
+const getRequestUrl = (input: RequestInfo | URL) => {
+  if (typeof input === 'string') {
+    return input
+  }
+
+  if (input instanceof URL) {
+    return input.toString()
+  }
+
+  return input.url
+}
 
 describe('SupabaseClient Methods', () => {
   let client: SupabaseClient
@@ -19,6 +41,11 @@ describe('SupabaseClient Methods', () => {
     client = createSupabaseClient({ baseUrl, apiKey, token })
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
   describe('Authentication Methods', () => {
     describe('signUp', () => {
       it('should return a signup session response', async () => {
@@ -30,18 +57,14 @@ describe('SupabaseClient Methods', () => {
           user: { id: 'new-user', email: 'test@example.com' }
         }
 
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const email = 'test@example.com'
         const password = 'password123'
@@ -53,17 +76,14 @@ describe('SupabaseClient Methods', () => {
       it('should return a signup confirmation response without a session', async () => {
         const mockResponse = { id: 'new-user', email: 'test@example.com' }
 
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const result = await client.signUp('test@example.com', 'password123')
 
@@ -73,34 +93,31 @@ describe('SupabaseClient Methods', () => {
       it('should send signup metadata, captcha token, and redirect URL', async () => {
         const mockResponse = { id: 'new-user', email: 'test@example.com' }
 
-        const fetchMock = Object.assign(
-          (input: RequestInfo | URL, init?: RequestInit) => {
-            const url = new URL(typeof input === 'string' ? input : input.toString())
-            const body = JSON.parse(String(init?.body))
+        mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
+          const url = new URL(getRequestUrl(input))
+          expect(typeof init?.body).toBe('string')
+          const body = JSON.parse(init?.body as string)
 
-            expect(url.pathname).toBe('/auth/v1/signup')
-            expect(url.searchParams.get('redirect_to')).toBe(
-              'https://app.example.com/auth/callback'
-            )
-            expect(body).toEqual({
-              email: 'test@example.com',
-              password: 'password123',
-              data: { name: 'Test User' },
-              gotrue_meta_security: { captcha_token: 'captcha-token' },
-              code_challenge: null,
-              code_challenge_method: null
+          expect(url.pathname).toBe('/auth/v1/signup')
+          expect(url.searchParams.get('redirect_to')).toBe(
+            'https://app.example.com/auth/callback'
+          )
+          expect(body).toEqual({
+            email: 'test@example.com',
+            password: 'password123',
+            data: { name: 'Test User' },
+            gotrue_meta_security: { captcha_token: 'captcha-token' },
+            code_challenge: null,
+            code_challenge_method: null
+          })
+
+          return Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
             })
-
-            return Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            )
-          },
-          { preconnect: () => Promise.resolve() }
-        )
-        globalThis.fetch = fetchMock
+          )
+        })
 
         const result = await client.signUp('test@example.com', 'password123', {
           data: { name: 'Test User' },
@@ -117,17 +134,14 @@ describe('SupabaseClient Methods', () => {
           msg: 'Email rate limit exceeded'
         }
 
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(responseBody), {
-                status: 429,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(responseBody), {
+              status: 429,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         try {
           await client.signUp('test@example.com', 'password123')
@@ -136,25 +150,23 @@ describe('SupabaseClient Methods', () => {
           expect(error).toBeInstanceOf(SupabaseError)
           expect((error as SupabaseError).statusCode).toBe(429)
           expect((error as SupabaseError).response).toEqual(responseBody)
-          expect((error as Error).message).toContain('Email rate limit exceeded')
+          expect((error as Error).message).toContain(
+            'Email rate limit exceeded'
+          )
         }
       })
     })
 
     describe('signIn', () => {
       it('should sign in a user successfully', async () => {
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockAuthResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockAuthResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const email = 'test@example.com'
         const password = 'password123'
@@ -168,18 +180,14 @@ describe('SupabaseClient Methods', () => {
       it('should get user successfully', async () => {
         const mockResponse = { user: 'me' }
 
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const result = await client.getUser()
         expect(result).toEqual(mockResponse)
@@ -192,18 +200,14 @@ describe('SupabaseClient Methods', () => {
       it('should perform GET request successfully', async () => {
         const mockResponse = [{ id: 1, name: 'Test' }]
 
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const result = await client.get('users')
         expect(result).toEqual(mockResponse)
@@ -212,21 +216,16 @@ describe('SupabaseClient Methods', () => {
       it('should perform GET request with query parameters', async () => {
         const mockResponse = [{ id: 1, name: 'Test' }]
 
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          (input: RequestInfo | URL, _init?: RequestInit) => {
-            const url = typeof input === 'string' ? input : input.toString()
-            expect(url).toContain('id=1')
-            return Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            )
-          },
-          { preconnect: () => Promise.resolve() }
-        )
-        globalThis.fetch = fetchMock
+        mockFetch((input: RequestInfo | URL, _init?: RequestInit) => {
+          const url = getRequestUrl(input)
+          expect(url).toContain('id=1')
+          return Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
+        })
 
         const queryParams = { id: '1' }
         const result = await client.get('users', queryParams)
@@ -238,18 +237,14 @@ describe('SupabaseClient Methods', () => {
       it('should perform POST request successfully', async () => {
         const mockResponse = { id: 2, name: 'New User' }
 
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () =>
-            Promise.resolve(
-              new Response(JSON.stringify(mockResponse), {
-                status: 201,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            ),
-          { preconnect: () => Promise.resolve() }
+        mockFetch(() =>
+          Promise.resolve(
+            new Response(JSON.stringify(mockResponse), {
+              status: 201,
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
         )
-        globalThis.fetch = fetchMock
 
         const data = { name: 'New User' }
         const result = await client.post('users', data)
@@ -259,12 +254,7 @@ describe('SupabaseClient Methods', () => {
 
     describe('delete', () => {
       it('should perform DELETE request successfully', async () => {
-        // Mock fetch for this test (Bun compatibility)
-        const fetchMock = Object.assign(
-          () => Promise.resolve(new Response('', { status: 204 })),
-          { preconnect: () => Promise.resolve() }
-        )
-        globalThis.fetch = fetchMock
+        mockFetch(() => Promise.resolve(new Response(null, { status: 204 })))
 
         const result = await client.delete('users', 'id', '1')
         expect(result).toEqual({})
@@ -274,25 +264,17 @@ describe('SupabaseClient Methods', () => {
 
   describe('Error Handling', () => {
     it('should handle HTTP errors', async () => {
-      // Mock fetch for this test (Bun compatibility)
-      const fetchMock = Object.assign(
-        () => Promise.resolve(new Response('Bad Request', { status: 400 })),
-        { preconnect: () => Promise.resolve() }
+      mockFetch(() =>
+        Promise.resolve(new Response('Bad Request', { status: 400 }))
       )
-      globalThis.fetch = fetchMock
 
       await expect(client.get('users')).rejects.toThrow('Request failed')
     })
 
     it('should handle network errors', async () => {
-      // Mock fetch for this test (Bun compatibility)
-      const fetchMock = Object.assign(
-        () => Promise.reject(new Error('Network error')),
-        { preconnect: () => Promise.resolve() }
-      )
-      globalThis.fetch = fetchMock
+      mockFetch(() => Promise.reject(new Error('Network error')))
 
-      expect(client.get('users')).rejects.toThrow('Network error')
+      await expect(client.get('users')).rejects.toThrow('Network error')
     })
   })
 })
